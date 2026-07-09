@@ -21,7 +21,7 @@ export interface Menu {
   createdAt: string;
   updatedAt: string;
   deletedAt: string | null;
-  roleMenus: RoleMenu[];
+  roleMenus?: RoleMenu[];
   roleMenuPermissions?: Array<{ roleId: number }>;
 }
 

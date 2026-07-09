@@ -10,10 +10,11 @@ import {
   FolderTree,
   Link2,
 } from "lucide-react";
-import type { MenuTreeNode } from "@/types/menu";
+import type { MenuTreeNode } from "../types/menu";
 
 interface MenuTableProps {
   tree: MenuTreeNode[];
+  roleNamesById: Map<number, string>;
   onEdit: (menu: MenuTreeNode) => void;
   onDelete: (menu: MenuTreeNode) => void;
   onAddChild: (parentId: number) => void;
@@ -46,6 +47,7 @@ function MenuRow({
   onEdit,
   onDelete,
   onAddChild,
+  roleNamesById,
   collapsed,
   onToggleCollapse,
 }: {
@@ -53,11 +55,16 @@ function MenuRow({
   onEdit: (menu: MenuTreeNode) => void;
   onDelete: (menu: MenuTreeNode) => void;
   onAddChild: (parentId: number) => void;
+  roleNamesById: Map<number, string>;
   collapsed: Set<number>;
   onToggleCollapse: (id: number) => void;
 }) {
   const hasChildren = node.children.length > 0;
   const isCollapsed = collapsed.has(node.id);
+  const roleIds =
+    node.roleMenuPermissions?.map((item) => item.roleId) ??
+    node.roleMenus?.map((item) => item.roleId) ??
+    [];
 
   return (
     <>
@@ -115,6 +122,19 @@ function MenuRow({
           </Badge>
         </td>
         <td className="px-4 py-3">
+          {roleIds.length > 0 ? (
+            <div className="flex flex-wrap gap-1">
+              {roleIds.map((roleId) => (
+                <Badge key={`${node.id}-${roleId}`} tone="indigo">
+                  {roleNamesById.get(roleId) ?? `Role #${roleId}`}
+                </Badge>
+              ))}
+            </div>
+          ) : (
+            <span className="text-slate-400">—</span>
+          )}
+        </td>
+        <td className="px-4 py-3">
           <div className="flex items-center justify-end gap-1">
             {node.menuType === "GROUP" && (
               <button
@@ -154,6 +174,7 @@ function MenuRow({
             onEdit={onEdit}
             onDelete={onDelete}
             onAddChild={onAddChild}
+            roleNamesById={roleNamesById}
             collapsed={collapsed}
             onToggleCollapse={onToggleCollapse}
           />
@@ -162,7 +183,13 @@ function MenuRow({
   );
 }
 
-export function MenuTable({ tree, onEdit, onDelete, onAddChild }: MenuTableProps) {
+export function MenuTable({
+  tree,
+  roleNamesById,
+  onEdit,
+  onDelete,
+  onAddChild,
+}: MenuTableProps) {
   const [collapsed, setCollapsed] = useState<Set<number>>(new Set());
 
   const toggleCollapse = (id: number) => {
@@ -205,6 +232,7 @@ export function MenuTable({ tree, onEdit, onDelete, onAddChild }: MenuTableProps
               <th className="px-4 py-3 text-center">Order</th>
               <th className="px-4 py-3">Status</th>
               <th className="px-4 py-3">Visibility</th>
+              <th className="px-4 py-3">Role permissions</th>
               <th className="px-4 py-3 text-right">Actions</th>
             </tr>
           </thead>
@@ -216,6 +244,7 @@ export function MenuTable({ tree, onEdit, onDelete, onAddChild }: MenuTableProps
                 onEdit={onEdit}
                 onDelete={onDelete}
                 onAddChild={onAddChild}
+                roleNamesById={roleNamesById}
                 collapsed={collapsed}
                 onToggleCollapse={toggleCollapse}
               />

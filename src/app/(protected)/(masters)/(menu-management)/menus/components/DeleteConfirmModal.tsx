@@ -1,7 +1,7 @@
 "use client";
 
 import { AlertTriangle } from "lucide-react";
-import type { Menu } from "@/types/menu";
+import type { Menu } from "../types/menu";
 
 interface DeleteConfirmModalProps {
   menu: Menu | null;

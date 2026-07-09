@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Plus,
   RefreshCw,
@@ -14,8 +14,10 @@ import { MenuTable } from "./components/MenuTable";
 import { MenuFormModal } from "./components/MenuFormModal";
 import { DeleteConfirmModal } from "./components/DeleteConfirmModal";
 import { getDirectChildrenCount } from "./lib/utils/menuTree";
+import { menuApi } from "./lib/api/menuApi";
 
 type StatusMessage = { type: "success" | "error"; text: string } | null;
+type RoleOption = { id: number; name: string };
 
 const Page = () => {
   const {
@@ -36,6 +38,35 @@ const Page = () => {
   const [prefillParentId, setPrefillParentId] = useState<number | null>(null);
   const [deletingMenu, setDeletingMenu] = useState<Menu | null>(null);
   const [status, setStatus] = useState<StatusMessage>(null);
+  const [availableRoles, setAvailableRoles] = useState<RoleOption[]>([]);
+
+  useEffect(() => {
+    let active = true;
+
+    const loadRoles = async () => {
+      try {
+        const res = await menuApi.listRoles();
+        if (active) {
+          setAvailableRoles(res.data ?? []);
+        }
+      } catch {
+        if (active) {
+          setAvailableRoles([]);
+        }
+      }
+    };
+
+    loadRoles();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const roleNamesById = useMemo(
+    () => new Map(availableRoles.map((role) => [role.id, role.name])),
+    [availableRoles],
+  );
 
   const filteredTree = useMemo(() => {
     if (!search.trim()) return tree;
@@ -219,6 +250,7 @@ const Page = () => {
         ) : (
           <MenuTable
             tree={filteredTree}
+            roleNamesById={roleNamesById}
             onEdit={openEditForm}
             onDelete={setDeletingMenu}
             onAddChild={(parentId) => openCreateForm(parentId)}
